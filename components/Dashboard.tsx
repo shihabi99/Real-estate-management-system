@@ -20,6 +20,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
   
   // Selection State
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   
   // Modal States
   const [isBuildingModalOpen, setIsBuildingModalOpen] = useState(false);
@@ -84,26 +85,69 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
     setIsLoading(false);
   };
 
-  const handleAddUser = async (e: React.FormEvent) => {
+  const handleSaveUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUser.name || !newUser.password) return;
+    if (!newUser.name) return;
+    // Password required only for new users
+    if (!editingUserId && !newUser.password) return;
 
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const user: SystemUser = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newUser.name,
-      role: newUser.role,
-      email: newUser.email,
-      phone: newUser.phone,
-      password: newUser.password
-    };
+    if (editingUserId) {
+      // Update existing user
+      setUsers(users.map(u => {
+        if (u.id === editingUserId) {
+          return {
+            ...u,
+            name: newUser.name,
+            role: newUser.role,
+            email: newUser.email,
+            phone: newUser.phone,
+            password: newUser.password ? newUser.password : u.password // Only update password if provided
+          };
+        }
+        return u;
+      }));
+    } else {
+      // Create new user
+      const user: SystemUser = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: newUser.name,
+        role: newUser.role,
+        email: newUser.email,
+        phone: newUser.phone,
+        password: newUser.password
+      };
+      setUsers([...users, user]);
+    }
 
-    setUsers([...users, user]);
-    setNewUser({ name: '', role: 'tenant', email: '', phone: '', password: '' });
-    setIsUserModalOpen(false);
+    closeUserModal();
     setIsLoading(false);
+  };
+
+  const handleEditUser = (user: SystemUser) => {
+    setNewUser({
+      name: user.name,
+      role: user.role,
+      email: user.email || '',
+      phone: user.phone || '',
+      password: '' // Don't populate password for security, leave blank to keep current
+    });
+    setEditingUserId(user.id);
+    setIsUserModalOpen(true);
+  };
+
+  const openAddUserModal = () => {
+    setEditingUserId(null);
+    setNewUser({ name: '', role: 'tenant', email: '', phone: '', password: '' });
+    setIsUserModalOpen(true);
+  };
+
+  const closeUserModal = () => {
+    setIsUserModalOpen(false);
+    setEditingUserId(null);
+    setNewUser({ name: '', role: 'tenant', email: '', phone: '', password: '' });
   };
 
   const getOwnerName = (ownerId?: string) => {
@@ -328,7 +372,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white transition-colors">People</h1>
                 <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 transition-colors">Manage tenants and owners in your system.</p>
               </div>
-              <Button onClick={() => setIsUserModalOpen(true)}>
+              <Button onClick={openAddUserModal}>
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
@@ -347,7 +391,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
                 <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-2 mb-6 transition-colors">
                   Add owners and tenants to the system to assign them to properties.
                 </p>
-                <Button variant="secondary" onClick={() => setIsUserModalOpen(true)}>
+                <Button variant="secondary" onClick={openAddUserModal}>
                   Add Person
                 </Button>
               </div>
@@ -361,6 +405,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Role</th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email</th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Phone</th>
+                        <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
@@ -390,6 +435,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
                             {user.phone || '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button 
+                              onClick={() => handleEditUser(user)} 
+                              className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                              aria-label="Edit User"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                              </svg>
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -496,15 +552,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
         </div>
       )}
 
-      {/* Add User Modal */}
+      {/* Add/Edit User Modal */}
       {isUserModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-sm transition-opacity" onClick={() => setIsUserModalOpen(false)} />
+          <div className="absolute inset-0 bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-sm transition-opacity" onClick={closeUserModal} />
           <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-sm p-6 transform transition-all animate-fadeIn">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Add Person</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Create a new user in the system.</p>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+              {editingUserId ? 'Edit Person' : 'Add Person'}
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              {editingUserId ? 'Update user details.' : 'Create a new user in the system.'}
+            </p>
             
-            <form onSubmit={handleAddUser} className="space-y-4">
+            <form onSubmit={handleSaveUser} className="space-y-4">
               <Input
                 id="userName"
                 label="Full Name"
@@ -563,15 +623,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
                 id="password"
                 label="Password"
                 type="password"
-                placeholder="••••••••"
+                placeholder={editingUserId ? "Leave blank to keep current" : "••••••••"}
                 value={newUser.password}
                 onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                required
+                required={!editingUserId} // Only required when creating a new user
               />
 
               <div className="flex gap-3 pt-4">
-                <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsUserModalOpen(false)}>Cancel</Button>
-                <Button type="submit" className="flex-1" isLoading={isLoading}>Create User</Button>
+                <Button type="button" variant="secondary" className="flex-1" onClick={closeUserModal}>Cancel</Button>
+                <Button type="submit" className="flex-1" isLoading={isLoading}>
+                  {editingUserId ? 'Save Changes' : 'Create User'}
+                </Button>
               </div>
             </form>
           </div>
