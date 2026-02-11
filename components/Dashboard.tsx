@@ -21,6 +21,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
   // Selection State
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editingBuildingId, setEditingBuildingId] = useState<string | null>(null);
   
   // Modal States
   const [isBuildingModalOpen, setIsBuildingModalOpen] = useState(false);
@@ -38,24 +39,50 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
 
   // --- Handlers ---
 
-  const handleAddBuilding = async (e: React.FormEvent) => {
+  const handleSaveBuilding = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBuilding.name || !newBuilding.location) return;
 
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    const building: Building = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: newBuilding.name,
-      location: newBuilding.location,
-      apartments: []
-    };
+    if (editingBuildingId) {
+      setBuildings(buildings.map(b => 
+        b.id === editingBuildingId 
+          ? { ...b, name: newBuilding.name, location: newBuilding.location } 
+          : b
+      ));
+    } else {
+      const building: Building = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: newBuilding.name,
+        location: newBuilding.location,
+        apartments: []
+      };
+      setBuildings([...buildings, building]);
+    }
 
-    setBuildings([...buildings, building]);
-    setNewBuilding({ name: '', location: '' });
-    setIsBuildingModalOpen(false);
+    closeBuildingModal();
     setIsLoading(false);
+  };
+
+  const openAddBuildingModal = () => {
+    setEditingBuildingId(null);
+    setNewBuilding({ name: '', location: '' });
+    setIsBuildingModalOpen(true);
+  };
+
+  const handleEditBuilding = (e: React.MouseEvent, building: Building) => {
+    e.stopPropagation();
+    setEditingBuildingId(building.id);
+    setNewBuilding({ name: building.name, location: building.location });
+    setIsBuildingModalOpen(true);
+  };
+
+  const closeBuildingModal = () => {
+    setIsBuildingModalOpen(false);
+    setEditingBuildingId(null);
+    setNewBuilding({ name: '', location: '' });
   };
 
   const handleAddApartment = async (e: React.FormEvent) => {
@@ -304,7 +331,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white transition-colors">Properties</h1>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 transition-colors">Manage your buildings and real estate assets.</p>
                   </div>
-                  <Button onClick={() => setIsBuildingModalOpen(true)}>
+                  <Button onClick={openAddBuildingModal}>
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
@@ -323,7 +350,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
                     <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-2 mb-6 transition-colors">
                       Get started by adding your first building to the dashboard.
                     </p>
-                    <Button variant="secondary" onClick={() => setIsBuildingModalOpen(true)}>
+                    <Button variant="secondary" onClick={openAddBuildingModal}>
                       Add Building
                     </Button>
                   </div>
@@ -341,9 +368,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                           </div>
+                          
+                          {/* Unit Badge (Top Left) */}
                           <div className="absolute top-3 right-3 bg-white/90 dark:bg-slate-800/90 backdrop-blur px-2 py-1 rounded text-xs font-medium text-slate-600 dark:text-slate-300 shadow-sm transition-colors">
                             {building.apartments.length} Units
                           </div>
+
+                          {/* Edit Button (Top Left) */}
+                          <button 
+                            onClick={(e) => handleEditBuilding(e, building)}
+                            className="absolute top-3 left-3 p-1.5 bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-full text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white shadow-sm transition-colors hover:scale-105"
+                            aria-label="Edit Property"
+                          >
+                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            </svg>
+                          </button>
                         </div>
                         <div className="p-5">
                           <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{building.name}</h3>
@@ -460,15 +500,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
 
       {/* --- MODALS --- */}
 
-      {/* Add Building Modal */}
+      {/* Add/Edit Building Modal */}
       {isBuildingModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-sm transition-opacity" onClick={() => setIsBuildingModalOpen(false)} />
+          <div className="absolute inset-0 bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-sm transition-opacity" onClick={closeBuildingModal} />
           <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-md p-6 transform transition-all animate-fadeIn">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Add New Property</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Enter the details for the new building.</p>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+              {editingBuildingId ? 'Edit Property' : 'Add New Property'}
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+              {editingBuildingId ? 'Update property details.' : 'Enter the details for the new building.'}
+            </p>
             
-            <form onSubmit={handleAddBuilding} className="space-y-4">
+            <form onSubmit={handleSaveBuilding} className="space-y-4">
               <Input
                 id="buildingName"
                 label="Building Name"
@@ -487,8 +531,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
                 required
               />
               <div className="flex gap-3 pt-4">
-                <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsBuildingModalOpen(false)}>Cancel</Button>
-                <Button type="submit" className="flex-1" isLoading={isLoading}>Add Property</Button>
+                <Button type="button" variant="secondary" className="flex-1" onClick={closeBuildingModal}>Cancel</Button>
+                <Button type="submit" className="flex-1" isLoading={isLoading}>
+                  {editingBuildingId ? 'Save Changes' : 'Add Property'}
+                </Button>
               </div>
             </form>
           </div>
