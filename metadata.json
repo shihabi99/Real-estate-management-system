@@ -1,0 +1,5 @@
+{
+  "name": "Admin Gatekeeper with dark mode",
+  "description": "A secure, aesthetic login portal featuring a default admin authentication flow and a minimal authenticated view.",
+  "requestFramePermissions": []
+}
