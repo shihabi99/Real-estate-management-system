@@ -9,16 +9,21 @@ Restructure the 'Real-estate-management-system' from a monolithic structure into
 Move from a flat structure to the following:
 
 /src
+  /assets           <-- Images, icons, global styles
   /components
-    /ui             <-- Shared, stateless components (Buttons, Inputs)
-    /layout         <-- Shell, Navbar, Sidebar
-  /features         <-- Domain-specific logic
-    /properties     <-- Property listing, details, editing
-    /tenants        <-- Tenant management
-    /finance        <-- Rent tracking, expenses
-    /hooks          <-- Logic extracted from App.tsx (useProperties, etc.)
-  /types            <-- TypeScript interfaces (extracted from types.ts)
-  /services         <-- API calls or LocalStorage logic
+    /ui             <-- Generic, stateless components (Buttons, Inputs, Modals)
+    /layout         <-- Shell, Navbar, Sidebar, Page wrappers
+  /features         <-- THE CORE: Domain-specific folders
+    /[feature-name] <-- e.g., properties, finance, tenants
+      /components   <-- UI specific to THIS feature only
+      /hooks        <-- Logic/State specific to THIS feature
+      /services     <-- Feature-specific API/Storage logic
+      /types.ts     <-- Local interfaces
+      /index.ts     <-- Barrel export (The "Front Door")
+  /hooks            <-- Global, reusable React hooks
+  /services         <-- Global API configurations or utility services
+  /types            <-- Global/Shared TypeScript definitions
+  /utils            <-- Helper functions (date formatting, currency, etc.)
 
 
 
@@ -49,5 +54,10 @@ When asked to add a new feature (e.g., "Maintenance Requests" or "Reports"), Gem
 - **Autonomy:** Gemini is authorized to create new sub-folders within `src/features/` or `src/components/` whenever a file exceeds 150 lines or when logic becomes distinct enough to warrant its own space.
 - **Naming Convention:** Folders must be named in `kebab-case` (e.g., `payment-processing`) and should contain an `index.ts` to act as the "Front Door" (Barrel Export) for that folder.
 - **Reporting:** When creating a new folder, Gemini must briefly explain *why* it is splitting the code (e.g., "Moving payment logic to a dedicated sub-folder for better isolation").
+
+## 7. DOCUMENTATION MAINTENANCE
+- **Living Document:** This md file must be updated whenever a new global service, utility pattern, or feature-grouping logic is introduced.
+- **Change Log:** When providing an updated version of this guide, Gemini should include a brief "Change Log" at the bottom explaining what was added to the architecture.
+- **Consistency Check:** Before generating any new code, Gemini should verify that the proposed file path aligns with Section 2 of this guide.
 
 
