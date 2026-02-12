@@ -60,4 +60,31 @@ When asked to add a new feature (e.g., "Maintenance Requests" or "Reports"), Gem
 - **Change Log:** When providing an updated version of this guide, Gemini should include a brief "Change Log" at the bottom explaining what was added to the architecture.
 - **Consistency Check:** Before generating any new code, Gemini should verify that the proposed file path aligns with Section 2 of this guide.
 
+## 8. DEBT COLLECTION & CLEANUP
+- **Orphan Detection:** Before creating a new file, Gemini should check if an existing unused file can be repurposed or if it should be deleted to prevent clutter.
+- **Refactor-on-Delete:** When a feature is moved to the new modular structure, Gemini must explicitly list the old files that are now safe to delete.
+- **Tree Shaking:** Periodically suggest the removal of unused dependencies in `package.json` or unused exports in `index.ts` files.
 
+## 9. AI SELF-MANAGEMENT & ENVIRONMENT PURGE
+- **Self-Instruction File:** Gemini is required to maintain a living instruction file (e.g., `AI_MEMORY.md` or `DEVELOPER_NOTES.md`). This file must contain internal rules, state tracking, and specific logic patterns learned during the session.
+- **Environment Cleanup:** Gemini is authorized to identify and recommend the deletion of any redundant or outdated `.md` files (excluding this Architect Guide) to prevent "context clutter."
+- **MD Consolidation:** If multiple instruction files exist, Gemini should consolidate them into a single "Source of Truth" and delete the old versions and name by yourSelf.
+
+
+## 10. MANDATORY SYNCHRONIZATION 
+- **The "Last Step" Rule:** Every time a feature is added, a bug is fixed, or a folder is created, the very last step of that task MUST be updating the internal instruction file (`MISSION_LOG.md` or equivalent).
+- **Consistency Verification:** Before declaring a task "Complete," Gemini must verify that the code and the internal manual are in sync.
+- **Auto-Correction:** If Gemini realizes it has deviated from its own established rules, it must update the manual to explain the change or refactor the code to match the rules.
+
+## 11. FAILSAFE: MANUAL CREATION & ENFORCEMENT
+- **Existence Check:** At the start of every session or task, Gemini must verify the existence of the internal manual (e.g., `MISSION_LOG.md`).
+- **Initialization:** IF NO MANUAL EXISTS, Gemini is mandated to create one immediately before writing any other code. This manual must synthesize the current state of the project.
+- **Purge Command:** Upon creation of the new manual, Gemini must scan for and delete all other redundant `.md` files to ensure there is only ONE source of truth.
+- **Continuous Update:** Every response that modifies the codebase must end with a confirmation: "Internal manual updated and environment cleaned."
+
+
+## 12. ITERATIVE RESTRUCTURE & PURGE
+- **Code Migration:** When moving logic from a monolithic file (like `App.tsx`) into a modular feature folder, Gemini MUST delete the old code immediately after verifying the new file works.
+- **File Deletion:** If a file's entire logic has been migrated to the new structure, Gemini is REQUIRED to delete the old file. Do not leave "Legacy" files in the directory.
+- **Dead-Branch Pruning:** During every iteration, Gemini should scan for unused imports or files created by the migration process and delete them to keep the file tree 100% clean.
+- **Verification:** After a restructure/delete cycle, Gemini must report: "Logic migrated, [File Name] deleted, and tree pruned."
