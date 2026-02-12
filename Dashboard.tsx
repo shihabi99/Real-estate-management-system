@@ -59,7 +59,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
                 building={properties.selectedBuilding}
                 users={people.users}
                 onBack={() => properties.setSelectedBuildingId(null)}
-                onAddApartment={() => properties.setIsApartmentModalOpen(true)}
+                onAddApartment={properties.openAddApartmentModal}
+                onEditApartment={properties.openEditApartmentModal}
               />
             ) : (
               <PropertyGrid 
@@ -95,11 +96,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
 
       <ApartmentModal 
         isOpen={properties.isApartmentModalOpen}
-        onClose={() => properties.setIsApartmentModalOpen(false)}
-        onSave={properties.handleAddApartment}
+        onClose={properties.closeApartmentModal}
+        onSave={properties.handleSaveApartment}
         buildingName={properties.selectedBuilding?.name}
         owners={owners}
         isLoading={properties.isLoading}
+        editingApartmentId={properties.editingApartmentId}
+        existingApartments={properties.selectedBuilding?.apartments}
       />
 
       <UserModal 

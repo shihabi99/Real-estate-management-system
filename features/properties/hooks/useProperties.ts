@@ -5,6 +5,7 @@ export const useProperties = () => {
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [editingBuildingId, setEditingBuildingId] = useState<string | null>(null);
+  const [editingApartmentId, setEditingApartmentId] = useState<string | null>(null);
   const [isBuildingModalOpen, setIsBuildingModalOpen] = useState(false);
   const [isApartmentModalOpen, setIsApartmentModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,28 +36,44 @@ export const useProperties = () => {
     setIsLoading(false);
   };
 
-  const handleAddApartment = async (unitNumber: string, floor: string, ownerId: string) => {
+  const handleSaveApartment = async (unitNumber: string, floor: string, ownerId: string) => {
     if (!selectedBuildingId) return;
 
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const apartment: Apartment = {
-      id: Math.random().toString(36).substr(2, 9),
-      unitNumber,
-      floor: floor || '1',
-      status: 'vacant',
-      ownerId: ownerId || undefined
-    };
+    if (editingApartmentId) {
+      // Edit existing apartment
+      setBuildings(buildings.map(b => {
+        if (b.id === selectedBuildingId) {
+          const updatedApartments = b.apartments.map(apt => 
+            apt.id === editingApartmentId
+              ? { ...apt, unitNumber, floor, ownerId: ownerId || undefined }
+              : apt
+          );
+          return { ...b, apartments: updatedApartments };
+        }
+        return b;
+      }));
+    } else {
+      // Create new apartment
+      const apartment: Apartment = {
+        id: Math.random().toString(36).substr(2, 9),
+        unitNumber,
+        floor: floor || '1',
+        status: 'vacant',
+        ownerId: ownerId || undefined
+      };
 
-    setBuildings(buildings.map(b => {
-      if (b.id === selectedBuildingId) {
-        return { ...b, apartments: [...b.apartments, apartment] };
-      }
-      return b;
-    }));
+      setBuildings(buildings.map(b => {
+        if (b.id === selectedBuildingId) {
+          return { ...b, apartments: [...b.apartments, apartment] };
+        }
+        return b;
+      }));
+    }
 
-    setIsApartmentModalOpen(false);
+    closeApartmentModal();
     setIsLoading(false);
   };
 
@@ -76,21 +93,41 @@ export const useProperties = () => {
     setEditingBuildingId(null);
   };
 
+  const openAddApartmentModal = () => {
+    setEditingApartmentId(null);
+    setIsApartmentModalOpen(true);
+  };
+
+  const openEditApartmentModal = (apartmentId: string) => {
+    setEditingApartmentId(apartmentId);
+    setIsApartmentModalOpen(true);
+  };
+
+  const closeApartmentModal = () => {
+    setIsApartmentModalOpen(false);
+    setEditingApartmentId(null);
+  };
+
   return {
     buildings,
     selectedBuilding,
     selectedBuildingId,
     editingBuildingId,
+    editingApartmentId,
     isBuildingModalOpen,
     isApartmentModalOpen,
     isLoading,
     setSelectedBuildingId,
     setEditingBuildingId,
+    setEditingApartmentId,
     setIsApartmentModalOpen,
     handleSaveBuilding,
-    handleAddApartment,
+    handleSaveApartment,
     openAddBuildingModal,
     openEditBuildingModal,
     closeBuildingModal,
+    openAddApartmentModal,
+    openEditApartmentModal,
+    closeApartmentModal,
   };
 };

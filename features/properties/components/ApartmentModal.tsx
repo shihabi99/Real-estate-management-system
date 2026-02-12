@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
-import { SystemUser } from '../../../types/index';
+import { SystemUser, Apartment } from '../../../types/index';
 
 interface ApartmentModalProps {
   isOpen: boolean;
@@ -10,6 +10,8 @@ interface ApartmentModalProps {
   buildingName?: string;
   owners: SystemUser[];
   isLoading: boolean;
+  editingApartmentId: string | null;
+  existingApartments?: Apartment[];
 }
 
 export const ApartmentModal: React.FC<ApartmentModalProps> = ({
@@ -19,6 +21,8 @@ export const ApartmentModal: React.FC<ApartmentModalProps> = ({
   buildingName,
   owners,
   isLoading,
+  editingApartmentId,
+  existingApartments = [],
 }) => {
   const [unitNumber, setUnitNumber] = useState('');
   const [floor, setFloor] = useState('');
@@ -26,11 +30,20 @@ export const ApartmentModal: React.FC<ApartmentModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setUnitNumber('');
-      setFloor('');
-      setOwnerId('');
+      if (editingApartmentId) {
+        const apt = existingApartments.find(a => a.id === editingApartmentId);
+        if (apt) {
+          setUnitNumber(apt.unitNumber);
+          setFloor(apt.floor);
+          setOwnerId(apt.ownerId || '');
+        }
+      } else {
+        setUnitNumber('');
+        setFloor('');
+        setOwnerId('');
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, editingApartmentId, existingApartments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,8 +57,12 @@ export const ApartmentModal: React.FC<ApartmentModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-sm transition-opacity" onClick={onClose} />
       <div className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-sm p-6 transform transition-all animate-fadeIn">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Add Apartment</h3>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Adding unit to {buildingName}</p>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">
+          {editingApartmentId ? 'Edit Apartment' : 'Add Apartment'}
+        </h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+          {editingApartmentId ? 'Update unit details' : `Adding unit to ${buildingName}`}
+        </p>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
@@ -89,7 +106,9 @@ export const ApartmentModal: React.FC<ApartmentModalProps> = ({
 
           <div className="flex gap-3 pt-4">
             <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>Cancel</Button>
-            <Button type="submit" className="flex-1" isLoading={isLoading}>Add Unit</Button>
+            <Button type="submit" className="flex-1" isLoading={isLoading}>
+              {editingApartmentId ? 'Save Changes' : 'Add Unit'}
+            </Button>
           </div>
         </form>
       </div>
