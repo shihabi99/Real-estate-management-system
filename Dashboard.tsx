@@ -13,6 +13,9 @@ import { ApartmentModal } from './features/properties/components/ApartmentModal'
 import { PeopleTable } from './features/people/components/PeopleTable';
 import { UserModal } from './features/people/components/UserModal';
 
+// Preview Components
+import { UiPreview } from './features/preview/components/UiPreview';
+
 interface DashboardProps {
   onLogout: () => void;
   isDarkMode: boolean;
@@ -20,7 +23,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, toggleTheme }) => {
-  const [activeTab, setActiveTab] = useState<'properties' | 'people'>('properties');
+  const [activeTab, setActiveTab] = useState<'properties' | 'people' | 'preview'>('properties');
 
   // Hooks
   const properties = useProperties();
@@ -80,6 +83,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, isDarkMode, togg
             onAddUser={people.openAddUserModal}
             onEditUser={people.handleEditUser}
           />
+        )}
+
+        {/* --- PREVIEW TAB --- */}
+        {activeTab === 'preview' && (
+          <UiPreview />
         )}
       </main>
 
