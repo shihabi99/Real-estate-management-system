@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { LoginForm } from './components/LoginForm';
-import { Dashboard } from './components/Dashboard';
-import { AuthState } from './types';
+import React, { useState } from 'react';
+import { LoginForm } from './features/auth/components/LoginForm';
+import { Dashboard } from './Dashboard';
+import { AuthState } from './types/index';
+import { useTheme } from './hooks/useTheme';
 
 export default function App() {
   const [auth, setAuth] = useState<AuthState>({
@@ -9,23 +10,7 @@ export default function App() {
     user: null,
   });
 
-  // Initialize theme from system preference or default to light
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return false;
-  });
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDarkMode]);
-
-  const toggleTheme = () => setIsDarkMode(!isDarkMode);
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const handleLogin = (username: string) => {
     setAuth({
